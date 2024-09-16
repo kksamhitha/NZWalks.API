@@ -20,23 +20,36 @@ namespace NZWalks.API.Controllers
         private readonly NZWalksDbContext dbContext;
         private readonly IRegionRepository regionRepository;
         private readonly IMapper mapper;
+        private readonly ILogger<RegionsController> logger;
 
-        public RegionsController(NZWalksDbContext dbContext, IRegionRepository regionRepository, IMapper mapper)
+        public RegionsController(NZWalksDbContext dbContext, 
+            IRegionRepository regionRepository, 
+            IMapper mapper,
+            ILogger<RegionsController> logger)
         {
             this.dbContext = dbContext;
             this.regionRepository = regionRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
         [HttpGet]
         [Authorize(Roles = "Reader,Writer")]
         public async Task<IActionResult> GetAll()
         {
+            try
+            {
+                logger.LogInformation("GetAll Action method in Regions controller was invoked.");
+                //get data from the Database - Domain model
+                var regionsDomain = await regionRepository.GetAllAsync(); //Instead of DB use the interfaceRepository to talk to DB.
 
-            //get data from the Database - Domain model
-            var regionsDomain = await regionRepository.GetAllAsync(); //Instead of DB use the interfaceRepository to talk to DB.
-            
-            // Return DTOs
-            return Ok(mapper.Map<List<RegionDto>>(regionsDomain)); //Map the domain model to DTO
+                // Return DTOs
+                return Ok(mapper.Map<List<RegionDto>>(regionsDomain)); //Map the domain model to DTO
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Exception from GetAll - Regions Controller");
+                throw;
+            }
         }
         [HttpGet]
         [Authorize(Roles = "Reader,Writer")]
